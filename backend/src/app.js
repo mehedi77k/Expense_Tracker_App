@@ -11,6 +11,7 @@ const categoryRoutes = require('./modules/categories/categories.routes');
 const budgetRoutes = require('./modules/budgets/budgets.routes');
 const analyticsRoutes = require('./modules/analytics/analytics.routes');
 const savingsRoutes = require('./modules/savings/savings.routes');
+const docsRoutes = require('./docs');
 
 function createApp() {
   const app = express();
@@ -22,6 +23,7 @@ function createApp() {
   app.use(express.urlencoded({ extended: false }));
   app.use('/api/v1', apiLimiter);
   app.use('/api/v1/auth', authLimiter, authRoutes);
+  app.use('/api/v1/docs', docsRoutes);
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', service: 'expense-tracker-api' });
   });
