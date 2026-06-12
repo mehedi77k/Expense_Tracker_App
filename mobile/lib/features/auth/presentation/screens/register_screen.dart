@@ -28,38 +28,58 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authSessionProvider);
+    final isLoading = authState.isLoading;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          SizedBox(height: 24),
-          Text('Create your account'),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
+          Text('Create your account', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 24),
           AppTextField(label: 'Name', controller: _nameController),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           AppTextField(
-              label: 'Email',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress),
-          SizedBox(height: 16),
+            label: 'Email',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 16),
           AppTextField(
-              label: 'Password',
-              controller: _passwordController,
-              obscureText: true),
-          SizedBox(height: 24),
+            label: 'Password',
+            controller: _passwordController,
+            obscureText: true,
+          ),
+          if (authState.hasError) ...[
+            const SizedBox(height: 16),
+            Text(
+              authState.error.toString(),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: 24),
           AppButton(
-            label: 'Register',
-            onPressed: () async {
-              await ref.read(authSessionProvider.notifier).register(
-                    name: _nameController.text.trim(),
-                    email: _emailController.text.trim(),
-                    password: _passwordController.text,
-                  );
-              if (mounted) {
-                context.go('/dashboard');
-              }
-            },
+            label: isLoading ? 'Creating account...' : 'Register',
+            onPressed: isLoading
+                ? null
+                : () async {
+                    await ref.read(authSessionProvider.notifier).register(
+                          name: _nameController.text.trim(),
+                          email: _emailController.text.trim(),
+                          password: _passwordController.text,
+                        );
+                    final session = ref.read(authSessionProvider).valueOrNull;
+                    if (mounted && session != null) {
+                      context.go('/dashboard');
+                    }
+                  },
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.go('/login'),
+            child: const Text('Already have an account? Login'),
           ),
         ],
       ),

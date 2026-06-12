@@ -11,10 +11,18 @@ final tokenStorageProvider = Provider<TokenStorage>((ref) {
   return TokenStorage(const FlutterSecureStorage());
 });
 
+final apiBaseUrlProvider = Provider<String>((ref) {
+  return const String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:3000/api/v1',
+  );
+});
+
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
-      baseUrl: const String.fromEnvironment('API_BASE_URL',
-          defaultValue: 'http://10.0.2.2:3000/api/v1'));
+    baseUrl: ref.watch(apiBaseUrlProvider),
+    tokenStorage: ref.watch(tokenStorageProvider),
+  );
 });
 
 final authRepositoryProvider = Provider<AuthRepositoryImpl>((ref) {
@@ -37,16 +45,19 @@ class AuthController extends StateNotifier<AsyncValue<AuthSession?>> {
   Future<void> login({required String email, required String password}) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(
-        () => _repository.login(email: email, password: password));
+      () => _repository.login(email: email, password: password),
+    );
   }
 
-  Future<void> register(
-      {required String name,
-      required String email,
-      required String password}) async {
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() =>
-        _repository.register(name: name, email: email, password: password));
+    state = await AsyncValue.guard(
+      () => _repository.register(name: name, email: email, password: password),
+    );
   }
 
   Future<void> logout() async {

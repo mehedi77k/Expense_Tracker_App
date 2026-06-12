@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandler');
 const { apiLimiter, authLimiter } = require('./middleware/rateLimiter');
+const { requireAuth } = require('./middleware/auth');
 const authRoutes = require('./modules/auth/auth.routes');
 const userRoutes = require('./modules/users/users.routes');
 const transactionRoutes = require('./modules/transactions/transactions.routes');
@@ -21,19 +22,21 @@ function createApp() {
   app.use(cors({ origin: process.env.FRONTEND_URL || true, credentials: true }));
   app.use(express.json({ limit: '2mb' }));
   app.use(express.urlencoded({ extended: false }));
-  app.use('/api/v1', apiLimiter);
-  app.use('/api/v1/auth', authLimiter, authRoutes);
-  app.use('/api/v1/docs', docsRoutes);
+
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', service: 'expense-tracker-api' });
   });
 
+  app.use('/api/v1', apiLimiter);
+  app.use('/api/v1/docs', docsRoutes);
+  app.use('/api/v1/auth', authLimiter, authRoutes);
+
   app.use('/api/v1/users', userRoutes);
-  app.use('/api/v1/transactions', transactionRoutes);
   app.use('/api/v1/categories', categoryRoutes);
-  app.use('/api/v1/budgets', budgetRoutes);
-  app.use('/api/v1/analytics', analyticsRoutes);
-  app.use('/api/v1/savings', savingsRoutes);
+  app.use('/api/v1/transactions', requireAuth, transactionRoutes);
+  app.use('/api/v1/budgets', requireAuth, budgetRoutes);
+  app.use('/api/v1/analytics', requireAuth, analyticsRoutes);
+  app.use('/api/v1/savings', requireAuth, savingsRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

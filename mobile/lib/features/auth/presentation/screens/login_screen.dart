@@ -26,35 +26,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authSessionProvider);
+    final isLoading = authState.isLoading;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          SizedBox(height: 24),
-          Text('Welcome back'),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
+          Text('Welcome back', style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 24),
           AppTextField(
-              label: 'Email',
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress),
-          SizedBox(height: 16),
+            label: 'Email',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 16),
           AppTextField(
-              label: 'Password',
-              controller: _passwordController,
-              obscureText: true),
-          SizedBox(height: 24),
+            label: 'Password',
+            controller: _passwordController,
+            obscureText: true,
+          ),
+          if (authState.hasError) ...[
+            const SizedBox(height: 16),
+            Text(
+              authState.error.toString(),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ],
+          const SizedBox(height: 24),
           AppButton(
-            label: 'Login',
-            onPressed: () async {
-              await ref.read(authSessionProvider.notifier).login(
-                    email: _emailController.text.trim(),
-                    password: _passwordController.text,
-                  );
-              if (mounted) {
-                context.go('/dashboard');
-              }
-            },
+            label: isLoading ? 'Logging in...' : 'Login',
+            onPressed: isLoading
+                ? null
+                : () async {
+                    await ref.read(authSessionProvider.notifier).login(
+                          email: _emailController.text.trim(),
+                          password: _passwordController.text,
+                        );
+                    final session = ref.read(authSessionProvider).valueOrNull;
+                    if (mounted && session != null) {
+                      context.go('/dashboard');
+                    }
+                  },
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => context.go('/register'),
+            child: const Text('Need an account? Register'),
           ),
         ],
       ),
